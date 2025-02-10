@@ -1,3 +1,4 @@
+
 - Change Data Capture (CDC) pipeline using Debezium, Kafka, Redis and BigQuery
 
 - - Infrastructure & Deployment:
