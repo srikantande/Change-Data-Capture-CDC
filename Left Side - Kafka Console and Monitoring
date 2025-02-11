@@ -1,0 +1,11 @@
+$ docker run -d --name pgsqlcdk -p 15432:5432 --hostname pgsqlcdk -e PGDATA='/var/lib/postgresql/data' -e POSTGRES_DB='cdkpsqldb' -e POSTGRES_USER='etl' -e POSTGRES_PASSWORD='etl' postgres:14.15-alpine3.21
+$ docker run -d --name cdkmntr -p 19009:9009 --hostname cdkmntr -p 19010:9010 --user root -e CDK_CONSOLE-URL="http://192.168.100.200:28080" conduktor/conduktor-console-cortex:1.31.0
+$ docker run -d --name cdkcnsl -p 28080:8080 --hostname cdkcnsl --link cdkmntr:cdkmntr --link pgsqlcdk:pgsqlcdk -e CDK_DATABASE_URL="postgresql://etl:etl@pgsqlcdk:5432/cdkpsqldb" -e CDK_MONITORING_CORTEX-URL="http://cdkmntr:9009/" -e CDK_MONITORING_ALERT-MANAGER-URL="http://cdkmntr:9010/" -e CDK_MONITORING_CALLBACK-URL="http://cdkcnsl:8080/monitoring/api/" -e CDK_MONITORING_NOTIFICATIONS-CALLBACK-URL="http://cdkcnsl:8080" conduktor/conduktor-console:1.31.0
+
+http://localhost:28080 >> Provide the email ID of admin and Password.
+
+References:
+[1] https://hub.docker.com/_/postgres/tags
+[2] https://hub.docker.com/r/conduktor/conduktor-console-cortex/tags
+[3] https://hub.docker.com/r/conduktor/conduktor-console/tags
+[4] https://docs.conduktor.io/platform/get-started/configuration/env-variables/
