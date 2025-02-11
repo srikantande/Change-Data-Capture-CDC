@@ -35,11 +35,23 @@ http://localhost:28080/console/home > Manage Cluster > Click on existing Cluster
 
 At this stage "Cluster state" must be Healthy with "Indexing state - Broker & topics as healthy", "Indexing state - Consumer group lag" as healthy & "Indexing state - Kafka Connect" as healthy. #4 Topics count (1 x internal topic and 3 x Debezium Topics) and with Partitions count > 0 (sum of all partitions of Topics).
 
+- Adding WePay Debezium connect for GCP BigQuery
 
+$ docker exec -it --user root connect bash
+
+bash-5.2# cd /tmp/
+bash-5.2# curl -o wepay-kafka-connect-bigquery-2.5.7.zip https://d2p6pa21dvn84.cloudfront.net/api/plugins/wepay/kafka-connect-bigquery/versions/2.5.7/wepay-kafka-connect-bigquery-2.5.7.zip
+bash-5.2# unzip wepay-kafka-connect-bigquery-2.5.7.zip
+bash-5.2# cd /kafka/connect
+bash-5.2# mv -v /tmp/wepay-kafka-connect-bigquery-2.5.7 .
+bash-5.2# exit
+
+$ docker restart connect
+
+http://localhost:28080/console/home  > Kafka Connect > 192-168-100-200-18083 > Create Connector > Assure that you are able to see "Sink: BigQuerySinkConnector (com.wepay.kafka.connect.bigquery.BigQuerySinkConnector)"
 
 References:
 https://hub.docker.com/r/apache/kafka/tags
 https://quay.io/repository/debezium/connect?tab=tags&tag=latest
 https://www.confluent.io/hub/wepay/kafka-connect-bigquery
 https://d2p6pa21dvn84.cloudfront.net/api/plugins/wepay/kafka-connect-bigquery/versions/2.5.7/wepay-kafka-connect-bigquery-2.5.7.zip
-
