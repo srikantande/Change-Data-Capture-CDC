@@ -1,0 +1,45 @@
+- Creating the Apache Kafka Zookeeper and Broker
+
+$ docker run -d --name zkbk --hostname zkbk --user root -p 9092:9092 -p 2181:2181 apache/kafka:3.9.0 sleep infinity
+$ docker exec -it zkbk bash
+
+zkbk:/# cd /opt/kafka/
+zkbk:/opt/kafka# vi config/server.properties
+
+Change the following values:
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://192.168.100.200:9092
+socket.request.max.bytes=524288000
+
+Start the Zookeeper and broker:
+
+zkbk:/opt/kafka# bin/zookeeper-server-start.sh config/zookeeper.properties &
+zkbk:/opt/kafka# bin/kafka-server-start.sh config/server.properties &
+
+- Adding the Apache Kafka to Conduktor UI Console
+
+http://localhost:28080/console/home > Left hand & on top side from drop down click on Manage Cluster > Add Cluster > Cluster Name and Technical ID = 192-168-100-200-9092 ; Bootstrap servers = 192.168.100.200:9092 ; click and slect the skip SSL Check ; Authn Method = none ; Click on Test connect and validate that Broker is connected > Create configuration
+Back to Home & wait for 2 mins for Conduktor to read the Kafka details & metrics.
+
+At this stage "Cluster state" must be Healthy with "Indexing state - Broker & topics as healthy" & "Indexing state - Consumer group lag" as healthy. All other counts will be zero (0).
+
+- Create the Debezium connect and add WePay modules
+
+docker run -d --name connect --link zkbk:kafka --link zkbk:zookeeper -p 18083:8083 -e STATUS_STORAGE_TOPIC=sri_statusstorage_topic -e CONFIG_STORAGE_TOPIC=sri_configstorage_topic -e OFFSET_STORAGE_TOPIC=sri_offsetstorage_topic quay.io/debezium/connect:3.1
+
+* Since we are Docker linking the zkbk to Kafka and zookeeper, Debezium will automatically connect to Apache kafka and create required topics for Debezium.
+
+- Adding Kafka Connect with Debezium Connect
+
+http://localhost:28080/console/home > Manage Cluster > Click on existing Cluster > Kafka Connect > Add connector > Name & Technical ID - 192-168-100-200-18083 ; URL - http://192.168.100.200:18083 ; check select - Skip SSL Check ;  Authn - No Security > Test connection --> Connected > Save > Back to home
+
+At this stage "Cluster state" must be Healthy with "Indexing state - Broker & topics as healthy", "Indexing state - Consumer group lag" as healthy & "Indexing state - Kafka Connect" as healthy. #4 Topics count (1 x internal topic and 3 x Debezium Topics) and with Partitions count > 0 (sum of all partitions of Topics).
+
+
+
+References:
+https://hub.docker.com/r/apache/kafka/tags
+https://quay.io/repository/debezium/connect?tab=tags&tag=latest
+https://www.confluent.io/hub/wepay/kafka-connect-bigquery
+https://d2p6pa21dvn84.cloudfront.net/api/plugins/wepay/kafka-connect-bigquery/versions/2.5.7/wepay-kafka-connect-bigquery-2.5.7.zip
+
